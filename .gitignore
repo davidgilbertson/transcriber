@@ -1,0 +1,8 @@
+.idea/
+.private/
+.venv/
+.vscode/
+build/
+dist/
+.env
+last_recording.*
