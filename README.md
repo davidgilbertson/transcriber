@@ -68,3 +68,7 @@ To build so it runs in the background:
 ```
 pyinstaller --onefile --noconsole transcriber.py
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. This is a permissive license that allows you to use, modify, and distribute the code freely, including for commercial purposes.
