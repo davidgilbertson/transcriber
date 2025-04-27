@@ -7,3 +7,4 @@ dist/
 .env
 last_recording.*
 transcriber.spec
+transcriptions.log
