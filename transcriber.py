@@ -11,8 +11,6 @@ import numpy as np
 import kb
 import volume
 
-DEBUG = True
-
 
 class Recorder:
     def __init__(self):
@@ -52,22 +50,25 @@ class Transcriber:
         self.oai = OpenAI()
 
         kb.add_hotkey(hotkey, self.toggle_recording)
-        kb.add_hotkey("esc", self.cancel)
         print(f"Press {hotkey} to start/stop recording.")
 
     def start(self):
-        keyboard.write("🔴")  # or ◯ or ● if using with a terminal
+        keyboard.write("🔴")  # or ● if using with a terminal
+        kb.add_hotkey("esc", self.stop)
 
         volume.duck()
         self.rec.start()
 
     def stop(self):
         keyboard.send("backspace")
-        keyboard.write("⌛")
+        kb.remove_hotkey("esc")
 
         wav_bytes = self.rec.stop()
         volume.restore()
+        return wav_bytes
 
+    def transcribe(self, wav_bytes):
+        keyboard.write("⌛")
         text = self.oai.audio.transcriptions.create(
             model="gpt-4o-transcribe",
             file=("audio.wav", wav_bytes),
@@ -79,22 +80,18 @@ class Transcriber:
         keyboard.send("backspace")
         keyboard.write(text)
 
-        if DEBUG:
-            with open("transcriptions.log", "a", encoding="utf-8") as f:
-                f.write("-" * 80 + "\n")
-                f.write(text + "\n")
-            Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())
-
-    def cancel(self):
-        if self.rec.recording:
-            keyboard.send("backspace")
-            self.rec.stop()
+        # For debugging:
+        # with open("transcriptions.log", "a", encoding="utf-8") as f:
+        #     f.write("-" * 80 + "\n")
+        #     f.write(text + "\n")
+        # Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())
 
     def toggle_recording(self):
         if not self.rec.recording:
             self.start()
         else:
-            self.stop()
+            wav_bytes = self.stop()
+            self.transcribe(wav_bytes)
 
 
 transcriber = Transcriber()
@@ -102,4 +99,4 @@ transcriber = Transcriber()
 try:
     kb.wait()
 finally:
-    kb.clear_all_hotkeys()
+    kb.remove_all_hotkeys()

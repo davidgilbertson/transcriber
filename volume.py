@@ -1,47 +1,89 @@
-# ===========================================================================
-# Volume control helpers (pycaw) – duck / restore API
-# ===========================================================================
-from ctypes import cast, POINTER
-import pythoncom
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
+import sys
+import time
+from typing import Optional
 
-_prev_level: float | None = None  # remembered volume for restore()
+# ---------------------------------------------------------------------------
+# Windows backend (COM/pycaw)
+# ---------------------------------------------------------------------------
+if sys.platform.startswith("win"):
+    from ctypes import POINTER, cast
+
+    import pythoncom
+    from comtypes import CLSCTX_ALL
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+    def _get_endpoint() -> POINTER(IAudioEndpointVolume):
+        """Return **IAudioEndpointVolume** for the current default output."""
+        pythoncom.CoInitialize()
+        device = AudioUtilities.GetSpeakers()
+        interface = device.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        return cast(interface, POINTER(IAudioEndpointVolume))
+
+    def get_level() -> float:
+        """Current output volume as a percentage (0–100)."""
+        ep = _get_endpoint()
+        try:
+            return ep.GetMasterVolumeLevelScalar() * 100.0
+        finally:
+            ep.Release()
+
+    def set_level(percent: float) -> None:
+        """Set output volume to *percent* (0–100)."""
+        ep = _get_endpoint()
+        try:
+            scalar = max(0.0, min(100.0, percent)) / 100.0
+            ep.SetMasterVolumeLevelScalar(scalar, None)
+        finally:
+            ep.Release()
+
+# ---------------------------------------------------------------------------
+# macOS backend (AppleScript via `osascript`)
+# ---------------------------------------------------------------------------
+elif sys.platform == "darwin":
+    import subprocess
+
+    def _osascript(script: str) -> str:
+        result = subprocess.run(
+            [
+                "osascript",
+                "-e",
+                script,
+            ],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    def get_level() -> float:
+        return float(_osascript("output volume of (get volume settings)"))
+
+    def set_level(percent: float) -> None:
+        vol = int(max(0.0, min(100.0, percent)))
+        _osascript(f"set volume output volume {vol}")
+
+# ---------------------------------------------------------------------------
+# Linux / other – fall‑back stubs
+# ---------------------------------------------------------------------------
+else:
+
+    def get_level() -> float:
+        """Return a dummy level (100%). Modify for PulseAudio, etc."""
+        return 100.0
+
+    def set_level(_percent: float) -> None:
+        """No‑op on unsupported platforms."""
+        pass
 
 
-def _get_endpoint() -> POINTER(IAudioEndpointVolume):
-    """Return IAudioEndpointVolume for the current default render device."""
-    # _get_endpoint may run in worker threads triggered by hot‑key callbacks.
-    # Ensure the *calling* thread is in an apartment; if it already is, this is
-    # a no‑op.
-    pythoncom.CoInitialize()
-    device = AudioUtilities.GetSpeakers()
-    interface = device.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-    return cast(interface, POINTER(IAudioEndpointVolume))
-
-
-def get_level() -> float:
-    # We call this every time in case a user case switched audio outputs
-    endpoint = _get_endpoint()
-    try:
-        return endpoint.GetMasterVolumeLevelScalar()
-    finally:
-        endpoint.Release()
-
-
-def set_level(scalar: float) -> None:
-    endpoint = _get_endpoint()
-    try:
-        endpoint.SetMasterVolumeLevelScalar(max(0.0, min(1.0, scalar)), None)
-    finally:
-        endpoint.Release()
+# ---------------------------------------------------------------------------
+# Common helpers – duck / restore
+# ---------------------------------------------------------------------------
+_prev_level: Optional[float] = None
 
 
 def duck(factor: float = 0.3) -> None:
-    """
-    Lower the current system volume by `factor` (0‒1) and remember it.
-    Does not make a quack sound.
-    """
+    """Lower the current system volume by *factor* (0–1) and remember it."""
     global _prev_level
     current = get_level()
     _prev_level = current
@@ -49,14 +91,12 @@ def duck(factor: float = 0.3) -> None:
 
 
 def restore() -> None:
-    """Restore volume to the level captured by the last `duck`."""
+    """Restore volume to the level captured by the last :pyfunc:`duck`."""
     if _prev_level is not None:
         set_level(_prev_level)
 
 
 if __name__ == "__main__":
-    import time
-
     duck()
     time.sleep(1)
     restore()

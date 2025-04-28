@@ -153,9 +153,8 @@ def _ensure_thread() -> _HookThread:
 class HotKeyHook:
     """Internal object representing a registered global hot‑key."""
 
-    __slots__ = ("_combo", "_callback", "_held", "_active", "_thread")
-
     def __init__(self, combo: str, callback: Callable[[], None]):
+        self.combo_string = combo
         self._combo = {_key_name_to_vk(k) for k in combo.split("+")}
         self._callback = callback
         self._held: set[int] = set()
@@ -192,14 +191,30 @@ class HotKeyHook:
 _hotkeys: List[HotKeyHook] = []
 
 
-def add_hotkey(combo: str, callback: Callable[[], None]) -> HotKeyHook:
+def add_hotkey(combo: str, callback: Callable) -> HotKeyHook:
     """Register *combo*, return the underlying object and keep a module ref."""
     hk = HotKeyHook(combo, callback)
     _hotkeys.append(hk)
     return hk
 
 
-def clear_all_hotkeys() -> None:
+def remove_hotkey(combo: str):
+    """Remove hotkey by combo from _hotkeys list."""
+    to_close = []
+    to_keep = []
+    for hk in _hotkeys:
+        if hk.combo_string == combo:
+            to_close.append(hk)
+        else:
+            to_keep.append(hk)
+
+    for hk in to_close:
+        hk.close()
+
+    _hotkeys[:] = to_keep
+
+
+def remove_all_hotkeys() -> None:
     """Unregister every hot‑key added via :pyfunc:`add_hotkey`."""
     while _hotkeys:
         _hotkeys.pop().close()
@@ -224,4 +239,4 @@ if __name__ == "__main__":
         while True:
             threading.Event().wait(1)
     except KeyboardInterrupt:
-        clear_all_hotkeys()
+        remove_all_hotkeys()
