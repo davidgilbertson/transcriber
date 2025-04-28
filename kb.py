@@ -1,18 +1,3 @@
-"""HotKeyHook – low‑level global hot‑key helper for Windows 10/11.
-
-External API
-============
-```
-add_hotkey(combo: str, callback: Callable[[], None]) -> HotKeyHook
-clear_all_hotkeys() -> None
-```
-`add_hotkey` registers a chord and returns the underlying `HotKeyHook` object;
-all created hooks are tracked so `clear_all_hotkeys()` can disable them at once.
-
-Key internals are unchanged: single‑fire on release, synthetic events ignored,
-minimal per‑event work, dedicated message‑loop thread.
-"""
-
 import ctypes
 import threading
 from typing import Callable, Final, Set, List
