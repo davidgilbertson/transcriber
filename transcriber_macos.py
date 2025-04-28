@@ -1,19 +1,15 @@
 # %%
-from pathlib import Path
 import wave
 import io
 
-import keyboard
 from openai import OpenAI
 from sounddevice import InputStream
 import numpy as np
-
-import kb
-import volume
-
-DEBUG = True
+from pynput.keyboard import GlobalHotKeys
+from pynput import keyboard as kb
 
 
+# Similar logic to transcriber.py, but less buggy on macOS.
 class Recorder:
     def __init__(self):
         self.frames = []
@@ -47,26 +43,30 @@ class Recorder:
 
 
 class Transcriber:
-    def __init__(self, hotkey="ctrl+alt+shift+q"):
+    def __init__(self):
         self.rec = Recorder()
         self.oai = OpenAI()
+        self.controller = kb.Controller()
 
-        kb.add_hotkey(hotkey, self.toggle_recording)
-        kb.add_hotkey("esc", self.cancel)
-        print(f"Press {hotkey} to start/stop recording.")
+    def run(self):
+        print("Press Ctrl+Alt+Shift+Q to start/stop recording.")
+        with GlobalHotKeys(
+            {
+                "<ctrl>+<alt>+<shift>+q": self.toggle_recording,
+                "<esc>": self.cancel,
+            }
+        ) as hk:
+            hk.join()
 
     def start(self):
-        keyboard.write("🔴")  # or ◯ or ● if using with a terminal
-
-        volume.duck()
+        self.controller.type("🔴")
         self.rec.start()
 
     def stop(self):
-        keyboard.send("backspace")
-        keyboard.write("⌛")
+        self.controller.tap(kb.Key.backspace)
+        self.controller.type("⌛")
 
         wav_bytes = self.rec.stop()
-        volume.restore()
 
         text = self.oai.audio.transcriptions.create(
             model="gpt-4o-transcribe",
@@ -76,21 +76,19 @@ class Transcriber:
             prompt="Use unicode characters where appropriate, like 'CO₂' and '45°'.",
         ).strip()
 
-        keyboard.send("backspace")
-        keyboard.write(text)
-
-        if DEBUG:
-            with open("transcriptions.log", "a", encoding="utf-8") as f:
-                f.write("-" * 80 + "\n")
-                f.write(text + "\n")
-            Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())
+        self.controller.tap(kb.Key.backspace)
+        self.controller.type(text)
 
     def cancel(self):
         if self.rec.recording:
-            keyboard.send("backspace")
+            self.controller.tap(kb.Key.backspace)
             self.rec.stop()
 
     def toggle_recording(self):
+        self.controller.release(kb.Key.ctrl)
+        self.controller.release(kb.Key.alt)
+        self.controller.release(kb.Key.shift)
+
         if not self.rec.recording:
             self.start()
         else:
@@ -98,8 +96,4 @@ class Transcriber:
 
 
 transcriber = Transcriber()
-
-try:
-    kb.wait()
-finally:
-    kb.clear_all_hotkeys()
+transcriber.run()
