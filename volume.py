@@ -40,6 +40,8 @@ if sys.platform.startswith("win"):
 # macOS backend (AppleScript via `osascript`)
 # ---------------------------------------------------------------------------
 elif sys.platform == "darwin":
+    # This is a bit slow (100's of ms).
+    # You can also use PyObjC's packages and should get <10 ms results.
     import subprocess
 
     def _osascript(script: str) -> str:
