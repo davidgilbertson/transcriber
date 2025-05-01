@@ -26,7 +26,7 @@ class Transcriber:
         print(f"Press {hotkey} to start/stop recording.")
 
     def start(self):
-        keyboard.write("🔴")  # or ● if using with a terminal
+        keyboard.write("🔴")  # or ● for use with a terminal
         kb.add_hotkey("esc", self.stop)
 
         self.rec.start()
