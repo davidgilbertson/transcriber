@@ -1,5 +1,6 @@
 # %%
 import os
+import gc
 
 import keyboard
 from openai import OpenAI
@@ -31,8 +32,8 @@ class Transcriber:
         self.rec.start()
 
     def stop(self):
-        # Stop first, which entails COM operations (volume.restore()), before using keyboard
         wav_bytes = self.rec.stop()
+        gc.collect()  # If GC happens during keyboard() methods, it errors, so we force one now (~15ms)
 
         keyboard.send("backspace")
         kb.remove_hotkey("esc")
