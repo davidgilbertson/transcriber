@@ -8,3 +8,4 @@ dist/
 last_recording.*
 transcriber.spec
 transcriptions.log
+log.json
