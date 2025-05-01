@@ -6,7 +6,7 @@
 SCRIPT_DIR="$(dirname "$0")"
 
 # Run the transcriber using the Python from the virtual environment
-"$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/transcriber.py"
+"$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/transcriber_macos.py"
 
 # Alternative version without console window (commented out)
-# nohup "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/transcriber.py" > /dev/null 2>&1 &
+# nohup "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/transcriber_macos.py" > /dev/null 2>&1 &

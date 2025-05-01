@@ -25,16 +25,25 @@ if sys.platform.startswith("win"):
         try:
             return ep.GetMasterVolumeLevelScalar() * 100.0
         finally:
-            ep.Release()
+            try:
+                ep.Release()
+            except Exception:
+                pass
+            pythoncom.CoUninitialize()
 
     def set_level(percent: float) -> None:
-        """Set output volume to *percent* (0–100)."""
+        """Set output volume to percent (0–100)."""
         ep = _get_endpoint()
         try:
             scalar = max(0.0, min(100.0, percent)) / 100.0
             ep.SetMasterVolumeLevelScalar(scalar, None)
         finally:
-            ep.Release()
+            try:
+                ep.Release()
+            except Exception:
+                pass
+            pythoncom.CoUninitialize()
+
 
 # ---------------------------------------------------------------------------
 # macOS backend (AppleScript via `osascript`)
@@ -63,6 +72,7 @@ elif sys.platform == "darwin":
     def set_level(percent: float) -> None:
         vol = int(max(0.0, min(100.0, percent)))
         _osascript(f"set volume output volume {vol}")
+
 
 # ---------------------------------------------------------------------------
 # Linux / other – fall‑back stubs

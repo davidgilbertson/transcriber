@@ -1,9 +1,19 @@
 # %%
+import os
+
 import keyboard
 from openai import OpenAI
 
 import kb
 from recorder import Recorder
+
+DEBUG = os.getenv("PYCHARM_HOSTED")
+
+if DEBUG:
+    # Catch COM faults
+    import faulthandler
+
+    faulthandler.enable()
 
 
 class Transcriber:
@@ -21,10 +31,12 @@ class Transcriber:
         self.rec.start()
 
     def stop(self):
+        # Stop first, which entails COM operations (volume.restore()), before using keyboard
+        wav_bytes = self.rec.stop()
+
         keyboard.send("backspace")
         kb.remove_hotkey("esc")
 
-        wav_bytes = self.rec.stop()
         return wav_bytes
 
     def transcribe(self, wav_bytes):
@@ -40,11 +52,12 @@ class Transcriber:
         keyboard.send("backspace")
         keyboard.write(text)
 
-        # For debugging:
-        # with open("transcriptions.log", "a", encoding="utf-8") as f:
-        #     f.write("-" * 80 + "\n")
-        #     f.write(text + "\n")
-        # Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())
+        if DEBUG:
+            with open("transcriptions.log", "a", encoding="utf-8") as f:
+                f.write("-" * 80 + "\n")
+                f.write(text + "\n")
+            with open("last_recording.wav", "wb") as f:
+                f.write(wav_bytes.getbuffer())
 
     def toggle_recording(self):
         if not self.rec.recording:

@@ -1,6 +1,8 @@
 # Transcriber
 
-A push-to-talk tool that records your voice and types the transcription wherever your cursor is. 
+A push-to-talk tool that records your voice and types the transcription wherever your cursor is.
+
+This is a personal experiment, not a polished product. Expect a few rough edges, especially if you're not on Windows.
 
 # Getting started
 

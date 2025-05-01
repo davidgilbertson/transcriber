@@ -39,3 +39,20 @@ class Recorder:
     @property
     def recording(self):
         return self.stream.active
+
+
+if __name__ == "__main__":
+    import time
+    from pathlib import Path
+
+    rec = Recorder()
+
+    rec.start()
+    print("Recording...")
+
+    time.sleep(2)
+
+    print("Done")
+    wav_bytes = rec.stop()
+
+    Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())

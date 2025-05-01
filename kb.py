@@ -231,10 +231,10 @@ def wait():
 if __name__ == "__main__":
     import keyboard
 
-    add_hotkey("ctrl+alt+shift+q", lambda: keyboard.write("hello🔴🔴"))
+    add_hotkey("ctrl+alt+shift+q", lambda: keyboard.write("Hello"))
     add_hotkey("esc", lambda: print("ESC"))
 
-    print("Press combos – others pass through. Ctrl+C quits.")
+    print("Listening for shortcuts. Ctrl+C quits.")
     try:
         while True:
             threading.Event().wait(1)
