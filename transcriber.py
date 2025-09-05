@@ -25,6 +25,7 @@ class Transcriber:
         self.border = Border(root)
         self.rec = Recorder()
         self.oai = OpenAI()
+        self._active_monitor_idx = None
 
         kb.add_hotkey(hotkey, self.toggle_recording)
         print(f"Press {hotkey} to start/stop recording.")
@@ -32,7 +33,12 @@ class Transcriber:
     def start(self):
         # keyboard.write("🔴")  # or ● for use with a terminal
         kb.add_hotkey("esc", self.stop)
-        self.border.show("#F8312F")
+        # Pick active monitor once; reuse for transcribing
+        try:
+            self._active_monitor_idx = self.border.get_active_monitor_index()
+        except Exception:
+            self._active_monitor_idx = None
+        self.border.show("#F8312F", monitor_index=self._active_monitor_idx)
 
         self.rec.start()
 
@@ -48,7 +54,7 @@ class Transcriber:
 
     def transcribe(self, wav_bytes):
         # keyboard.write("⌛")
-        self.border.show("#FFB02E")
+        self.border.show("#FFB02E", monitor_index=self._active_monitor_idx)
         from utils import stopwatch
 
         with stopwatch("Transcription", log=False) as sw:

@@ -2,7 +2,7 @@
 import tkinter as tk
 import time
 import sys
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 if sys.platform.startswith("win"):
     import ctypes
@@ -41,7 +41,7 @@ class Border:
             monitors = [(0, 0, width, height)]
 
         # Create one overlay per monitor
-        self._overlays = []  # list of dicts: {win, canvas, rect}
+        self._overlays = []  # list of dicts: {win, canvas, rect, bounds}
         for (left, top, width, height) in monitors:
             win = tk.Toplevel(root)
             win.overrideredirect(True)
@@ -70,7 +70,14 @@ class Border:
 
             # Start hidden; use show() to display
             win.withdraw()
-            self._overlays.append({"win": win, "canvas": canvas, "rect": rect})
+            self._overlays.append(
+                {
+                    "win": win,
+                    "canvas": canvas,
+                    "rect": rect,
+                    "bounds": (left, top, width, height),
+                }
+            )
 
     def _enumerate_windows_monitors(self) -> List[Tuple[int, int, int, int]]:
         """Return a list of (left, top, width, height) for each Windows monitor."""
@@ -125,9 +132,18 @@ class Border:
         user32.EnumDisplayMonitors(0, 0, MonitorEnumProc(_callback), 0)
         return monitors
 
-    def show(self, color):
-        """Show the overlay with the specified border color."""
-        for item in self._overlays:
+    def show(self, color: str, monitor_index: Optional[int] = None):
+        """Show the overlay with the specified border color.
+
+        If monitor_index is provided, only that monitor's overlay is shown.
+        Otherwise, all overlays are shown.
+        """
+        targets = (
+            [self._overlays[monitor_index]]
+            if (monitor_index is not None and 0 <= monitor_index < len(self._overlays))
+            else self._overlays
+        )
+        for item in targets:
             item["canvas"].itemconfig(item["rect"], outline=color)
             item["win"].deiconify()
         # immediate redraw without mainloop
@@ -138,6 +154,72 @@ class Border:
         for item in self._overlays:
             item["win"].withdraw()
         # self.root.update()
+
+    def get_active_monitor_index(self) -> Optional[int]:
+        """Return the index of the monitor containing the foreground window.
+
+        Windows-only. Returns 0 on non-Windows or when detection fails.
+        """
+        if not sys.platform.startswith("win"):
+            return 0 if self._overlays else None
+
+        try:
+            user32 = ctypes.windll.user32
+
+            # Structures local to this function (duplicated to avoid refactoring)
+            class RECT(ctypes.Structure):
+                _fields_ = [
+                    ("left", ctypes.c_long),
+                    ("top", ctypes.c_long),
+                    ("right", ctypes.c_long),
+                    ("bottom", ctypes.c_long),
+                ]
+
+            class MONITORINFO(ctypes.Structure):
+                _fields_ = [
+                    ("cbSize", ctypes.c_ulong),
+                    ("rcMonitor", RECT),
+                    ("rcWork", RECT),
+                    ("dwFlags", ctypes.c_ulong),
+                ]
+
+            hwnd = user32.GetForegroundWindow()
+            if not hwnd:
+                return 0 if self._overlays else None
+
+            MONITOR_DEFAULTTONEAREST = 2
+            hmon = user32.MonitorFromWindow(ctypes.c_void_p(hwnd), MONITOR_DEFAULTTONEAREST)
+            if not hmon:
+                return 0 if self._overlays else None
+
+            info = MONITORINFO()
+            info.cbSize = ctypes.sizeof(MONITORINFO)
+            user32.GetMonitorInfoW(ctypes.c_void_p(hmon), ctypes.byref(info))
+
+            left = int(info.rcMonitor.left)
+            top = int(info.rcMonitor.top)
+            right = int(info.rcMonitor.right)
+            bottom = int(info.rcMonitor.bottom)
+            width = right - left
+            height = bottom - top
+
+            # First try exact bounds match
+            for idx, item in enumerate(self._overlays):
+                l, t, w, h = item.get("bounds", (0, 0, 0, 0))
+                if (l, t, w, h) == (left, top, width, height):
+                    return idx
+
+            # Fallback: use center-point containment
+            cx = (left + right) // 2
+            cy = (top + bottom) // 2
+            for idx, item in enumerate(self._overlays):
+                l, t, w, h = item.get("bounds", (0, 0, 0, 0))
+                if l <= cx < l + w and t <= cy < t + h:
+                    return idx
+
+            return 0 if self._overlays else None
+        except Exception:
+            return 0 if self._overlays else None
 
     # def destroy(self):
     #     """Destroy the overlay and quit the application."""
