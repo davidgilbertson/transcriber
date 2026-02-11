@@ -6,18 +6,16 @@ from typing import Optional
 # Windows backend (COM/pycaw)
 # ---------------------------------------------------------------------------
 if sys.platform.startswith("win"):
-    from ctypes import POINTER, cast
+    from ctypes import POINTER
 
     import pythoncom
-    from comtypes import CLSCTX_ALL
     from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
     def _get_endpoint() -> POINTER(IAudioEndpointVolume):
         """Return **IAudioEndpointVolume** for the current default output."""
         pythoncom.CoInitialize()
         device = AudioUtilities.GetSpeakers()
-        interface = device.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        return cast(interface, POINTER(IAudioEndpointVolume))
+        return device.EndpointVolume
 
     def get_level() -> float:
         """Current output volume as a percentage (0–100)."""

@@ -1,0 +1,19 @@
+[project]
+name = "transcriber"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "deepgram-sdk>=5.3.1",
+    "keyboard>=0.13.5",
+    "numpy>=2.4.1",
+    "openai>=2.15.0",
+    "pydub>=0.25.1",
+    "sounddevice>=0.5.3",
+    "pywin32; sys_platform == 'win32'",
+    "comtypes; sys_platform == 'win32'",
+    "pycaw; sys_platform == 'win32'",
+    "google-cloud-speech>=2.35.0",
+    "black>=25.12.0",
+]

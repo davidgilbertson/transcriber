@@ -1,14 +1,14 @@
 # %%
-import os
 import gc
+import json
 import tkinter as tk
-
-import keyboard
-from openai import OpenAI
-
+from pathlib import Path
 import kb
 from recorder import Recorder
 from border import Border
+import keyboard
+from stt import speech_to_text
+
 
 # DEBUG = os.getenv("PYCHARM_HOSTED")
 DEBUG = False
@@ -24,14 +24,12 @@ class Transcriber:
     def __init__(self, root: tk.Tk, hotkey="ctrl+alt+shift+q"):
         self.border = Border(root)
         self.rec = Recorder()
-        self.oai = OpenAI()
         self._active_monitor_idx = None
 
         kb.add_hotkey(hotkey, self.toggle_recording)
         print(f"Press {hotkey} to start/stop recording.")
 
     def start(self):
-        # keyboard.write("🔴")  # or ● for use with a terminal
         kb.add_hotkey("esc", self.stop)
         # Pick active monitor once; reuse for transcribing
         try:
@@ -46,47 +44,44 @@ class Transcriber:
         wav_bytes = self.rec.stop()
         gc.collect()  # If GC happens during keyboard() methods, it errors, so we force one now (~15ms)
 
-        # keyboard.send("backspace")
         kb.remove_hotkey("esc")
 
         self.border.hide()
         return wav_bytes
 
     def transcribe(self, wav_bytes):
-        # keyboard.write("⌛")
         self.border.show("#FFB02E", monitor_index=self._active_monitor_idx)
         from utils import stopwatch
 
         with stopwatch("Transcription", log=False) as sw:
-            text = (
-                self.oai.audio.transcriptions.create(
-                    model="gpt-4o-transcribe",
-                    file=("audio.wav", wav_bytes),
-                    language="en",
-                    response_format="text",
-                    prompt="Use unicode characters where appropriate, like 'CO₂' and '45°'. Use UK spelling, not US spelling.",
-                )
-                .strip()
-                .replace("\n", "⏎")
-            )
+            text = speech_to_text(wav_bytes)
 
-        # keyboard.send("backspace")
         self.border.hide()
-        keyboard.write(text)
+        # Without a small delay, Claude Code drops characters.
+        # And with the delay it looks nicer anyway
+        keyboard.write(text, delay=0.01)
 
-        if DEBUG:
-            import json
-
-            n_frames = sum(len(x) for x in self.rec.frames)
-            data = dict(
+        n_frames = sum(len(x) for x in self.rec.frames)
+        log_line = json.dumps(
+            dict(
                 audio_length_s=n_frames / self.rec.stream.samplerate,
                 transcribe_time_ms=int(sw.get_time_ms()),
                 text=text,
             )
-            with open("log.jsonl", "a") as f:
-                f.write(json.dumps(data) + "\n")
-            with open("last_recording.wav", "wb") as f:
-                f.write(wav_bytes.getbuffer())
+        )
+
+        # Log the text
+        log_path = Path("log.jsonl")
+        if not log_path.exists():
+            log_path.write_text(log_line)
+        else:
+            log_lines = log_path.read_text().splitlines()[-499:]  # Truncate
+            log_lines.append(log_line)
+            log_path.write_text("\n".join(log_lines))
+
+        # Log the last recording
+        with open("last_recording.wav", "wb") as f:
+            f.write(wav_bytes.getbuffer())
 
     def toggle_recording(self):
         if not self.rec.recording:
