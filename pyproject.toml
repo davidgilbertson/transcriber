@@ -15,5 +15,7 @@ dependencies = [
     "comtypes; sys_platform == 'win32'",
     "pycaw; sys_platform == 'win32'",
     "google-cloud-speech>=2.35.0",
+    "google-genai>=1.58.0",
     "black>=25.12.0",
+    "python-dotenv>=1.2.2",
 ]

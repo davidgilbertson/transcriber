@@ -1,0 +1,328 @@
+[
+  {
+    "recorded_at": "2026-04-11T14:20:43",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "This is a test to see how it's going to write out .env or readme.md, whether it understands agents.md, and how it would spell runtranscriber.py.",
+      "response_time_s": 1.74
+    },
+    "gpt-4o-transcribe": {
+      "text": "This is a test to see how it can write out .env or README.md, whether it understands agents.md, and how it would spell run_transcriber.py.",
+      "response_time_s": 1.74
+    },
+    "mai-transcribe-1": {
+      "text": "This is a test to see how it's going to write out .env or readme.md, whether it understands agents.md and how it would spell run transcriber.py.",
+      "response_time_s": 2.47
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T14:34:32",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "No, that's not what I was asking for. I wanted to know at 2:34 p.m. what's going to happen then. And also, if my phone is to the left of me and my mouse is to the right, what's in the middle?",
+      "response_time_s": 1.25
+    },
+    "gpt-4o-transcribe": {
+      "text": "No, that's not what I was asking for. I wanted to know at 2:34 p.m. what's going to happen then. And also, if my phone is to the left of me and my mouse is to the right, what's in the middle?",
+      "response_time_s": 2.16
+    },
+    "mai-transcribe-1": {
+      "text": "No, that's not what I was asking for. I wanted to know at 2:34 p.m. what's going to happen then. And also, if my phone is to the left of me and my mouse is to the right, what's in the middle?",
+      "response_time_s": 2.32
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T14:36:50",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "If a third-party package imports SQLite3 and I try to deploy that to Cloud Run with the default build pack, is that going to error?",
+      "response_time_s": 1.26
+    },
+    "gpt-4o-transcribe": {
+      "text": "If a third-party package imports sqlite3, and I try to deploy that to Cloud Run with the default Buildpack, is that going to error?",
+      "response_time_s": 1.48
+    },
+    "mai-transcribe-1": {
+      "text": "If a third-party package imports SQLite3 and I try to deploy that to Cloud Run with the default buildpack, is that going to error?",
+      "response_time_s": 2.18
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T14:38:52",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "11Labs released a new model recently, and is it going to be better than GPT-4o Mini Transcribe?",
+      "response_time_s": 0.94
+    },
+    "gpt-4o-transcribe": {
+      "text": "Have 11 labs released a new model recently? And is it going to be better than GPT-4o Mini Transcribe?",
+      "response_time_s": 1.2
+    },
+    "mai-transcribe-1": {
+      "text": "Have ElevenLabs released a new model recently? And is it going to be better than GPT-4o Mini Transcribe?",
+      "response_time_s": 2.2
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T14:42:30",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Does Eleven Labs have a plan where I can just pay for API usage, or do I have to pay a fixed monthly fee as well, in which case they can go fuck themselves?",
+      "response_time_s": 1.14
+    },
+    "gpt-4o-transcribe": {
+      "text": "Does ElevenLabs have a plan where I can just pay for API usage, or do I have to pay a fixed monthly fee as well, in which case they can go fuck themselves?",
+      "response_time_s": 1.47
+    },
+    "mai-transcribe-1": {
+      "text": "Does ElevenLabs have a plan where I can just pay for API usage or do I have to pay a fixed monthly fee as well, in which case they can go fuck themselves?",
+      "response_time_s": 2.21
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T14:48:15",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Is it true that I can't just PAYG for scrap?",
+      "response_time_s": 1.07
+    },
+    "gpt-4o-transcribe": {
+      "text": "Is it true that I can't just PAYG for Scrab?",
+      "response_time_s": 0.69
+    },
+    "mai-transcribe-1": {
+      "text": "Is it true that I can't just PAYG for scribe?",
+      "response_time_s": 1.82
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T14:52:44",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Testing 1, 2, 3.",
+      "response_time_s": 1.42
+    },
+    "scribe_v2": {
+      "text": "Testing one, two, three",
+      "response_time_s": 0.77
+    },
+    "mai-transcribe-1": {
+      "text": "Testing 1, 2, 3.",
+      "response_time_s": 1.54
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T15:04:52",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Go to https://www.google.com and search for 'price of bananas in Andover'.",
+      "response_time_s": 2.41
+    },
+    "mai-transcribe-1": {
+      "text": "Go to https://www.google.com and search for price of bananas in Andover.",
+      "response_time_s": 2.09
+    },
+    "scribe_v2": {
+      "text": "Go to https://www.google.com and search for price of bananas in Andover",
+      "response_time_s": 1.15
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T15:15:51",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Run gcloud services list --enabled.",
+      "response_time_s": 0.89
+    },
+    "scribe_v2": {
+      "error": "HTTP Error 401: Unauthorized",
+      "response_time_s": 0.88
+    },
+    "mai-transcribe-1": {
+      "text": "Run gcloud services list --enabled.",
+      "response_time_s": 1.78
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T15:20:05",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Look in the stt.py file, and where it references lastrecording.wav, make sure that it closes that file connection before carrying on.",
+      "response_time_s": 1.87
+    },
+    "mai-transcribe-1": {
+      "text": "Look in the stt.py file and where it references lastrecording.wav, make sure that it closes that file connection before carrying on.",
+      "response_time_s": 2.17
+    },
+    "chirp_3": {
+      "text": "Look in the stt.py file and where it references last recording.wav. Make sure that it closes that file connection before carrying on.",
+      "response_time_s": 5.99
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T15:46:50",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "No, that's not what I want. Trevono should be spelt with a capital T.",
+      "response_time_s": 2.13
+    },
+    "mai-transcribe-1": {
+      "text": "No, that's not what I want. Trevono should be spelt with a capital T.",
+      "response_time_s": 2.07
+    },
+    "chirp_3": {
+      "text": "No, that's not what I want. Trevono should be spelled with a capital T.",
+      "response_time_s": 5.8
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T15:59:53",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Can you make it so that I can run the comparison just using the last recording WAV file? I think that duplicates some logic from the bottom of STT.py, so you can remove that and put it all in the compare thing. Just make it so I can either run start or run a function to use the last recording.",
+      "response_time_s": 2.64
+    },
+    "mai-transcribe-1": {
+      "text": "Can you make it so that I can run the comparison just using the last recording WAV file? I think that duplicates some logic from the bottom of STT.py so you can remove that and put it all in the compare thing. Just make it so I can either run start or run a function to use the last recording.",
+      "response_time_s": 3.04
+    },
+    "chirp_3": {
+      "text": "Can you make it so that I can run the comparison just using the last recording web file? I think that duplicates some logic from the bottom of stt.py, so you can remove that and put it all in the compare thing. Just make it so it can either run start or run a function to use the last recording.",
+      "response_time_s": 8.73
+    },
+    "scribe_v2": {
+      "text": "Can you make it so that I can run the comparison just using the last recording WAV file? I think that duplicates some logic from the bottom of stt.py, so you can remove that and put it all in the compare thing. Just make it so I can either run start or run a function to use the last recording.",
+      "response_time_s": 3.23
+    },
+    "stt-async-v4": {
+      "text": "Can you make it so that I can run the comparison just using the last recording WAV file? I think that duplicates some logic from the bottom of stt.py, so you can remove that and put it all in the compare thing. Just make it so I can either run start or run a function to use the last recording.",
+      "response_time_s": 10.21
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T16:05:31",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "In Python's difflib, can you explain what SequenceMatcher does?",
+      "response_time_s": 2.01
+    },
+    "mai-transcribe-1": {
+      "text": "In Python's difflib, can you explain what sequenceMatcher does?",
+      "response_time_s": 1.93
+    },
+    "scribe_v2": {
+      "text": "In Python's difflib, can you explain what SequenceMatcher does?",
+      "response_time_s": 0.94
+    },
+    "stt-async-v4": {
+      "text": "In Python's diff lib, can you explain what sequenceMatcher does?",
+      "response_time_s": 7.38
+    },
+    "chirp_3": {
+      "text": "In Python's difflib, can you explain what SequenceMatcher does?",
+      "response_time_s": 4.97
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T16:07:25",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "I'm using OpenAI Codex and I want to put in the config TOML a new MCP configuration. What's the allowed syntax for that?",
+      "response_time_s": 2.03
+    },
+    "mai-transcribe-1": {
+      "text": "I'm using OpenAI Codex and I want to put in the config.toml a new MCP configuration. What's the allowed syntax for that?",
+      "response_time_s": 2.46
+    },
+    "scribe_v2": {
+      "text": "I'm using OpenAI Codex, and I wanna put in the config TOML a new MCP configuration. What's the allowed syntax for that?",
+      "response_time_s": 1.34
+    },
+    "stt-async-v4": {
+      "text": "I'm using OpenAI Codex, and I want to put in the config tommel a new MCP configuration. What's the allowed syntax for that?",
+      "response_time_s": 7.7
+    },
+    "chirp_3": {
+      "text": "I'm using open AI Codex and I want to put in the config Toml a new MCP configuration. What's the allowed syntax for that?",
+      "response_time_s": 5.09
+    }
+  },
+  {
+    "recorded_at": "2026-04-11T18:03:40",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Add a static small informational section at the top of the HTML file that has the pricing for each of these models. Look each one up from the literal that you created and do what you need to do to simplify them all onto the same scale and use the same metric for all of them, even if that's imperfect.",
+      "response_time_s": 2.52
+    },
+    "mai-transcribe-1": {
+      "text": "Add a static small informational section at the top of the HTML file that has the pricing for each of these models. Look each one up from the literal that you created and do what you need to do to simplify them all onto the same scale and use the same metric for all of them even if that's imperfect.",
+      "response_time_s": 3.85
+    },
+    "scribe_v2": {
+      "text": "Add a static small informational section at the top of the HTML file that has the pricing for each of these models. Look each one up from the literal that you created, and do what you need to do to simplify them all onto the same scale and use the same metric for all of them, even if that's imperfect",
+      "response_time_s": 3.81
+    },
+    "stt-async-v4": {
+      "text": "Add a static small informational section at the top of the HTML file that has the pricing for each of these models. Look each one up from the literal that you created and do what you need to do to simplify them all under the same scale and use the same metric for all of them, even if that's imperfect.",
+      "response_time_s": 6.62
+    },
+    "chirp_3": {
+      "text": "Add a static small informational section at the top of the HTML file that has the pricing for each of these models. Look each one up from the literal that you created and do what you need to do to simplify them all under the same scale and use the same metric for all of them even if that's imperfect.",
+      "response_time_s": 8.01
+    }
+  },
+  {
+    "recorded_at": "2026-04-13T11:08:48",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Tell me about pytest config options. Can I put it in pyproject.toml? Is it best practice to put it in its own config file? Or if I've got a conftest.py file, can I configure things in there?",
+      "response_time_s": 2.66
+    },
+    "mai-transcribe-1": {
+      "text": "Tell me about pytest config options. Can I put it in pyproject.toml? Is it best practice to put it in its own config file? Or if I've got a conftest.py file, can I configure things in there?",
+      "response_time_s": 2.58
+    },
+    "scribe_v2": {
+      "text": "Tell me about pytest config options. Can I put it in pyproject.toml? Is it best practice to put it in its own config file? Or if I've got a conftest.py file, can I configure things in there?",
+      "response_time_s": 2.18
+    },
+    "stt-async-v4": {
+      "text": "Tell me about pytest config options. Can I put it in pyproject.toml? Is it best practice to put it in its own config file, or if I've got a conftest.py file, can I configure things in there?",
+      "response_time_s": 6.25
+    },
+    "chirp_3": {
+      "text": "Tell me about Pytest config options. Can I put it in pyproject.toml? Is it best practice to put it in its own config file? Or if I've got a conf test.py file, can I configure things in there?",
+      "response_time_s": 11.08
+    }
+  },
+  {
+    "recorded_at": "2026-04-13T15:32:22",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "I get an error, DeprecationWarning: codecs.open is deprecated. Use open() instead.",
+      "response_time_s": 1.82
+    },
+    "mai-transcribe-1": {
+      "text": "I get an error: \"Deprecation warning: Codex.open is deprecated. Use open instead\".",
+      "response_time_s": 2.52
+    },
+    "scribe_v2": {
+      "error": "HTTP Error 401: Unauthorized",
+      "response_time_s": 0.76
+    },
+    "stt-async-v4": {
+      "text": "I get an error: deprecation warning. Codex.open is deprecated. Use open instead.",
+      "response_time_s": 6.25
+    },
+    "chirp_3": {
+      "text": "I get an error deprecation warning. Codex.open is deprecated. Use open instead.",
+      "response_time_s": 7.23
+    }
+  },
+  {
+    "recorded_at": "2026-04-30T17:15:41",
+    "gpt-4o-mini-transcribe-2025-12-15": {
+      "text": "Do you understand what I'm trying to achieve here and why just reading the docs does not give me high confidence?",
+      "response_time_s": 2.6
+    },
+    "mai-transcribe-1": {
+      "text": "Do you understand what I'm trying to achieve here and why just reading the docs does not give me high confidence?",
+      "response_time_s": 2.28
+    },
+    "stt-async-v4": {
+      "text": "Do you understand what I'm trying to achieve here and why just reading the docs does not give me s high confidence?",
+      "response_time_s": 5.98
+    },
+    "chirp_3": {
+      "text": "Do you understand what I'm trying to achieve here and why just reading the docs does not give me high confidence?",
+      "response_time_s": 5.37
+    },
+    "gemini-3-flash-preview": {
+      "error": "No API key was provided. Please pass a valid API key. Learn how to create an API key at https://ai.google.dev/gemini-api/docs/api-key.",
+      "response_time_s": 0.48
+    }
+  }
+]

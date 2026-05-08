@@ -1,11 +1,20 @@
 @echo off
+setlocal EnableDelayedExpansion
 REM Windows batch file for running the transcriber
 REM Equivalent of run_transcriber.sh for Windows systems
 
 REM Get the directory where the script is located using %~dp0
+set "SCRIPT_DIR=%~dp0"
+set "PID_FILE=%SCRIPT_DIR%transcriber.pid"
 
-REM Run the transcriber using the Python from the virtual environment
-REM start "" "%~dp0.venv\Scripts\python.exe" "%~dp0transcriber.py"
+if exist "%PID_FILE%" (
+    set /p EXISTING_PID=<"%PID_FILE%"
+    if defined EXISTING_PID (
+        taskkill /PID !EXISTING_PID! /F >nul 2>&1
+    )
+    del "%PID_FILE%" >nul 2>&1
+)
 
-REM Alternative version without console window
-start "" "%~dp0.venv\Scripts\pythonw.exe" "%~dp0transcriber.py"
+for /f %%i in ('powershell -NoProfile -Command "$process = Start-Process -FilePath '%SCRIPT_DIR%.venv\Scripts\pythonw.exe' -ArgumentList @('%SCRIPT_DIR%transcriber.py') -WorkingDirectory '%SCRIPT_DIR%' -PassThru; $process.Id"') do (
+    >"%PID_FILE%" echo %%i
+)

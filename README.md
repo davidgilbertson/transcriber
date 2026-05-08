@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ## Running the application
 
-On Windows, run `run_transcriber.bat`. On macOS/Linux, run `run_transcriber.sh`
+On Windows, run `run_transcriber.bat`. Re-running it acts like a restart: it kills the previously launched process from `transcriber.pid` and starts a fresh one. On macOS/Linux, run `run_transcriber.sh`
 
 Once running, press the defined shortcut to start recording. Press it again to stop recording and begin transcription (takes a few seconds). The transcribed text will be inserted at the cursor position.
 

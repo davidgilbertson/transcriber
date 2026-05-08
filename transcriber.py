@@ -8,10 +8,13 @@ from recorder import Recorder
 from border import Border
 import keyboard
 from stt import speech_to_text
+from utils import get_foreground_window_title
 
 
 # DEBUG = os.getenv("PYCHARM_HOSTED")
 DEBUG = False
+
+SLOW_TYPE_DELAY_S = 0.01
 
 if DEBUG:
     # Catch COM faults
@@ -57,9 +60,14 @@ class Transcriber:
             text = speech_to_text(wav_bytes)
 
         self.border.hide()
-        # Without a small delay, Claude Code drops characters.
-        # And with the delay it looks nicer anyway
-        keyboard.write(text, delay=0.01)
+        title = get_foreground_window_title()
+
+        # If a window title contains one of these terms, we feed in characters slowly.
+        if any(text in title for text in ["Claude", " - Notepad"]):
+            # Without a small delay, Claude Code drops characters.
+            keyboard.write(text, delay=0.01)
+        else:
+            keyboard.write(text)
 
         n_frames = sum(len(x) for x in self.rec.frames)
         log_line = json.dumps(
