@@ -26,6 +26,7 @@ from border import Border
 
 MODEL = "gpt-realtime-whisper"
 DELAY = "xhigh"  # "minimal", "low", "medium", "high", "xhigh"
+PUSH_TO_TALK = True
 
 
 class TranscriberRealtime:
@@ -40,40 +41,50 @@ class TranscriberRealtime:
         self.sender_thread = None
         self.receiver_thread = None
         self.recording = False
+        self.recording_lock = threading.Lock()
         self.wrote_text = False
 
-        kb.add_hotkey(hotkey, self.toggle_recording)
-        print(f"Press {hotkey} to start/stop recording.")
+        if PUSH_TO_TALK:
+            kb.add_hold_hotkey(hotkey, self.start, self.stop)
+            print(f"Hold {hotkey} to record.")
+        else:
+            kb.add_hotkey(hotkey, self.toggle_recording)
+            print(f"Press {hotkey} to start/stop recording.")
 
     def start(self):
-        self.audio_queue = queue.Queue()
-        self.completed.clear()
-        self.wrote_text = False
-        self.recording = True
+        with self.recording_lock:
+            if self.recording:
+                return
 
-        self.border.show("#F8312F")
-        volume.duck()
+            self.audio_queue = queue.Queue()
+            self.completed.clear()
+            self.wrote_text = False
+            self.recording = True
 
-        self.sender_thread = threading.Thread(target=self.send_audio)
-        self.sender_thread.start()
+            self.border.show("#F8312F")
+            volume.duck()
 
-        self.stream = RawInputStream(
-            samplerate=24_000,
-            channels=1,
-            dtype="int16",
-            callback=self.process_audio_input,
-        )
-        self.stream.start()
+            self.sender_thread = threading.Thread(target=self.send_audio)
+            self.sender_thread.start()
+
+            self.stream = RawInputStream(
+                samplerate=24_000,
+                channels=1,
+                dtype="int16",
+                callback=self.process_audio_input,
+            )
+            self.stream.start()
 
     def stop(self):
-        if not self.recording:
-            return
+        with self.recording_lock:
+            if not self.recording:
+                return
 
-        self.recording = False
-        self.stream.close()
-        volume.restore()
-        self.border.hide()
-        self.audio_queue.put(None)
+            self.recording = False
+            self.stream.close()
+            volume.restore()
+            self.border.hide()
+            self.audio_queue.put(None)
 
     def process_audio_input(self, indata, *_):
         self.audio_queue.put(bytes(indata))

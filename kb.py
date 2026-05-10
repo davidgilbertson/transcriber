@@ -118,8 +118,12 @@ class _HookThread(threading.Thread):
     def _callback(self, nCode: int, wParam: int, lParam):  # noqa: N802, ANN001
         if nCode == 0:  # HC_ACTION
             kb = ctypes.cast(lParam, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
-            if kb.flags & LLKHF_INJECTED:
-                return user32.CallNextHookEx(self._hook, nCode, wParam, lParam)
+            # TODO: We used to ignore injected events here because keyboard.write()
+            # and terminal focus may have caused weird behavior. I don't think it's
+            # necessary now, and Logitech mouse shortcuts arrive as injected events.
+            # If injected-key issues come back, uncomment this guard.
+            # if kb.flags & LLKHF_INJECTED:
+            #     return user32.CallNextHookEx(self._hook, nCode, wParam, lParam)
 
             vk = _ALIAS_TO_GENERIC.get(kb.vkCode, kb.vkCode)
             down = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
@@ -153,10 +157,16 @@ def _ensure_thread() -> _HookThread:
 class HotKeyHook:
     """Internal object representing a registered global hot‑key."""
 
-    def __init__(self, combo: str, callback: Callable[[], None]):
+    def __init__(
+        self,
+        combo: str,
+        callback: Callable[[], None],
+        release_callback: Callable[[], None] | None = None,
+    ):
         self.combo_string = combo
         self._combo = {_key_name_to_vk(k) for k in combo.split("+")}
         self._callback = callback
+        self._release_callback = release_callback
         self._held: set[int] = set()
         self._active = False
         self._thread = _ensure_thread()
@@ -169,7 +179,20 @@ class HotKeyHook:
         elif up:
             self._held.discard(vk)
 
-        if not self._active and self._combo.issubset(self._held):
+        combo_held = self._combo.issubset(self._held)
+
+        if self._release_callback is not None:
+            if not self._active and combo_held:
+                self._active = True
+                threading.Timer(0.02, self._callback).start()
+            elif self._active and not combo_held:
+                self._active = False
+                self._held.clear()
+                threading.Timer(0.02, self._release_callback).start()
+
+            return self._active and down and vk in self._combo
+
+        if not self._active and combo_held:
             self._active = True
 
         if self._active and not (self._held & self._combo):
@@ -194,6 +217,15 @@ _hotkeys: List[HotKeyHook] = []
 def add_hotkey(combo: str, callback: Callable) -> HotKeyHook:
     """Register *combo*, return the underlying object and keep a module ref."""
     hk = HotKeyHook(combo, callback)
+    _hotkeys.append(hk)
+    return hk
+
+
+def add_hold_hotkey(
+    combo: str, press_callback: Callable, release_callback: Callable
+) -> HotKeyHook:
+    """Register *combo* as a hold action with press and release callbacks."""
+    hk = HotKeyHook(combo, press_callback, release_callback)
     _hotkeys.append(hk)
     return hk
 

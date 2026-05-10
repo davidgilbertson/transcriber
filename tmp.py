@@ -1,143 +1,177 @@
-# Target realtime transcriber flow:
-#
-# 1. User presses the hotkey to start recording.
-#
-# 2. Recording starts immediately. No waiting for OpenAI connection setup before capturing audio.
-#
-# 3. In the background, the realtime OpenAI connection/session is created or already available.
-#
-# 4. As microphone audio arrives, it is sent to the realtime connection continuously.
-#
-# 5. As transcription deltas come back while the user is still speaking, those words are written to the active window live, not held until the stop hotkey.
-#
-# 6. User presses the hotkey again to stop recording.
-#
-# 7. The app stops capturing microphone audio.
-#
-# 8. The app sends `commit` for the final buffered audio, keeps listening for remaining deltas / the `completed` transcript, and writes any final trailing text that was not already written.
-#
-# 9. Once `completed` arrives, the app is done with that recording turn.
-
-import base64
-import queue
-import threading
+import ctypes
+from ctypes import wintypes
 import time
 
-from dotenv import load_dotenv
-from openai import OpenAI
-from sounddevice import RawInputStream
+user32 = ctypes.WinDLL("user32", use_last_error=True)
+kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+WH_KEYBOARD_LL = 13
+WM_KEYDOWN = 0x0100
+WM_KEYUP = 0x0101
+WM_SYSKEYDOWN = 0x0104
+WM_SYSKEYUP = 0x0105
+WM_TIMER = 0x0113
+
+LISTEN_SECONDS = 60
+
+LLKHF_EXTENDED = 0x01
+LLKHF_LOWER_IL_INJECTED = 0x02
+LLKHF_INJECTED = 0x10
+LLKHF_ALTDOWN = 0x20
+LLKHF_UP = 0x80
+
+VK_NAMES = {
+    0x10: "SHIFT",
+    0x11: "CTRL",
+    0x12: "ALT",
+    0xA0: "LSHIFT",
+    0xA1: "RSHIFT",
+    0xA2: "LCTRL",
+    0xA3: "RCTRL",
+    0xA4: "LALT",
+    0xA5: "RALT",
+    0x51: "Q",
+    0x7C: "F13",
+    0x7D: "F14",
+    0x7E: "F15",
+    0x7F: "F16",
+}
 
 
-MODEL = "gpt-realtime-whisper"
-record_seconds = 5
-delay = "xhigh"
+class KBDLLHOOKSTRUCT(ctypes.Structure):
+    _fields_ = [
+        ("vkCode", wintypes.DWORD),
+        ("scanCode", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.c_void_p),
+    ]
 
 
-load_dotenv()
-client = OpenAI()
+HOOKPROC = ctypes.WINFUNCTYPE(
+    wintypes.LPARAM,
+    ctypes.c_int,
+    wintypes.WPARAM,
+    wintypes.LPARAM,
+)
+UINT_PTR = ctypes.c_size_t
 
-audio_queue = queue.Queue()
-completed = threading.Event()
-connection = None
-started_at = None
-sender_thread = None
-receiver_thread = None
-first_append_logged = False
+user32.SetWindowsHookExW.argtypes = [
+    ctypes.c_int,
+    HOOKPROC,
+    wintypes.HINSTANCE,
+    wintypes.DWORD,
+]
+user32.SetWindowsHookExW.restype = wintypes.HHOOK
+user32.CallNextHookEx.argtypes = [
+    wintypes.HHOOK,
+    ctypes.c_int,
+    wintypes.WPARAM,
+    wintypes.LPARAM,
+]
+user32.CallNextHookEx.restype = wintypes.LPARAM
+user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
+user32.UnhookWindowsHookEx.restype = wintypes.BOOL
+user32.GetMessageW.argtypes = [
+    ctypes.POINTER(wintypes.MSG),
+    wintypes.HWND,
+    wintypes.UINT,
+    wintypes.UINT,
+]
+user32.GetMessageW.restype = wintypes.BOOL
+user32.TranslateMessage.argtypes = [ctypes.POINTER(wintypes.MSG)]
+user32.TranslateMessage.restype = wintypes.BOOL
+user32.DispatchMessageW.argtypes = [ctypes.POINTER(wintypes.MSG)]
+user32.DispatchMessageW.restype = wintypes.LPARAM
+user32.GetAsyncKeyState.argtypes = [ctypes.c_int]
+user32.GetAsyncKeyState.restype = wintypes.SHORT
+user32.SetTimer.argtypes = [
+    wintypes.HWND,
+    UINT_PTR,
+    wintypes.UINT,
+    ctypes.c_void_p,
+]
+user32.SetTimer.restype = UINT_PTR
+user32.KillTimer.argtypes = [wintypes.HWND, UINT_PTR]
+user32.KillTimer.restype = wintypes.BOOL
 
 
-def print_event(event_type, text):
-    print(f"{time.perf_counter() - started_at:6.2f}s {event_type}: {text}", flush=True)
+def key_state(vk):
+    return bool(user32.GetAsyncKeyState(vk) & 0x8000)
 
 
-def receive_events():
-    for event in connection:
-        if event.type == "session.updated":
-            print_event("session_updated", event.session.type)
-        if event.type == "conversation.item.input_audio_transcription.delta":
-            print_event("delta", event.delta or "")
-        elif event.type == "conversation.item.input_audio_transcription.completed":
-            print_event("completed", event.transcript)
-            completed.set()
-            break
-        elif event.type == "input_audio_buffer.committed":
-            print_event("committed", event.item_id)
+def flags_text(flags):
+    names = []
+    if flags & LLKHF_EXTENDED:
+        names.append("EXTENDED")
+    if flags & LLKHF_LOWER_IL_INJECTED:
+        names.append("LOWER_IL_INJECTED")
+    if flags & LLKHF_INJECTED:
+        names.append("INJECTED")
+    if flags & LLKHF_ALTDOWN:
+        names.append("ALTDOWN")
+    if flags & LLKHF_UP:
+        names.append("UP")
+    return "|".join(names) or "-"
 
 
-def send_audio():
-    global connection, receiver_thread, first_append_logged
+def event_name(wparam):
+    return {
+        WM_KEYDOWN: "KEYDOWN",
+        WM_KEYUP: "KEYUP",
+        WM_SYSKEYDOWN: "SYSKEYDOWN",
+        WM_SYSKEYUP: "SYSKEYUP",
+    }.get(wparam, hex(wparam))
 
-    print_event("status", "connecting")
-    with client.realtime.connect(
-        extra_query=dict(intent="transcription")
-    ) as connection:
-        receiver_thread = threading.Thread(target=receive_events)
-        receiver_thread.start()
 
-        print_event("status", "updating session")
-        connection.session.update(
-            session=dict(
-                type="transcription",
-                audio=dict(
-                    input=dict(
-                        format=dict(type="audio/pcm", rate=24_000),
-                        transcription=dict(
-                            model=MODEL,
-                            language="en",
-                            delay=delay,
-                        ),
-                        turn_detection=None,
-                    )
-                ),
-            )
+def hook_proc(nCode, wParam, lParam):
+    if nCode >= 0:
+        kb = ctypes.cast(lParam, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
+        vk = kb.vkCode
+        name = VK_NAMES.get(vk, chr(vk) if 32 <= vk <= 126 else "?")
+
+        print(
+            f"{time.time():.3f} "
+            f"{event_name(wParam):10} "
+            f"vk=0x{vk:02X} {name:8} "
+            f"scan=0x{kb.scanCode:02X} "
+            f"flags={kb.flags:02X} {flags_text(kb.flags):25} "
+            f"mods="
+            f"ctrl={key_state(0x11)} "
+            f"alt={key_state(0x12)} "
+            f"shift={key_state(0x10)}",
+            flush=True,
         )
 
-        while True:
-            audio_chunk = audio_queue.get()
-            if audio_chunk is None:
-                break
-            if not first_append_logged:
-                print_event("append", "first audio chunk")
-                first_append_logged = True
-            connection.input_audio_buffer.append(
-                audio=base64.b64encode(audio_chunk).decode("ascii")
-            )
-
-        print_event("status", "committing final audio")
-        connection.input_audio_buffer.commit()
-        completed.wait()
-        connection.close()
-        receiver_thread.join()
+    return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
 
-def record_callback(indata, *_):
-    audio_queue.put(bytes(indata))
+callback = HOOKPROC(hook_proc)
 
+hook = user32.SetWindowsHookExW(
+    WH_KEYBOARD_LL,
+    callback,
+    None,
+    0,
+)
 
-def run():
-    global started_at, sender_thread, audio_queue, first_append_logged
+if not hook:
+    raise ctypes.WinError(ctypes.get_last_error())
 
-    started_at = time.perf_counter()
-    audio_queue = queue.Queue()
-    first_append_logged = False
-    completed.clear()
+timer_id = user32.SetTimer(None, 0, LISTEN_SECONDS * 1000, None)
 
-    sender_thread = threading.Thread(target=send_audio)
-    sender_thread.start()
+print(f"Listening for {LISTEN_SECONDS} seconds. Press Ctrl+C to stop.", flush=True)
 
-    with RawInputStream(
-        samplerate=24_000,
-        channels=1,
-        dtype="int16",
-        callback=record_callback,
-    ):
-        print_event("status", f"recording for {record_seconds}s")
-        time.sleep(record_seconds)
-
-    print_event("status", "stopped recording")
-    audio_queue.put(None)
-    sender_thread.join()
-
-
-if __name__ == "__main__":
-    print("Starting...")
-    run()
+msg = wintypes.MSG()
+try:
+    while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) != 0:
+        if msg.message == WM_TIMER and msg.wParam == timer_id:
+            break
+        user32.TranslateMessage(ctypes.byref(msg))
+        user32.DispatchMessageW(ctypes.byref(msg))
+except KeyboardInterrupt:
+    pass
+finally:
+    user32.KillTimer(None, timer_id)
+    user32.UnhookWindowsHookEx(hook)
+    print("Stopped.", flush=True)
