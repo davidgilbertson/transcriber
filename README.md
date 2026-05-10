@@ -9,7 +9,8 @@ This is a personal experiment, not a polished product. Expect a few rough edges,
 ## Prerequisites
 
 - Git
-- Python 3.8 or higher
+- Python 3.14 or higher
+- uv
 - An OpenAI API key set as an environment variable, `OPENAI_API_KEY=...`
 
 ## Installation
@@ -23,31 +24,23 @@ git clone https://github.com/davidgilbertson/transcriber.git
 cd transcriber
 ```
 
-Create a virtual environment (optional but recommended):
+Install Python dependencies:
 ```
-python -m venv .venv
-```
-
-Activate the virtual environment:
-- On Windows:
-  ```
-  .venv\Scripts\activate
-  ```
-- On macOS/Linux:
-  ```
-  source .venv/bin/activate
-  ```
-
-Install required Python dependencies:
-```
-pip install -r requirements.txt
+uv sync
 ```
 
 ## Running the application
 
-On Windows, run `run_transcriber.bat`. Re-running it acts like a restart: it kills the previously launched process from `transcriber.pid` and starts a fresh one. On macOS/Linux, run `run_transcriber.sh`
+On Windows, run `run_transcriber.bat`. Re-running it acts like a restart.
 
-Once running, press the defined shortcut to start recording. Press it again to stop recording and begin transcription (takes a few seconds). The transcribed text will be inserted at the cursor position.
+On macOS/Linux, run `run_transcriber.sh`
+
+There are two Windows entrypoints:
+
+- `transcriber.py` records first, then sends the completed audio to a normal speech-to-text model. This is the best path for comparing batch-style providers in `stt.py`.
+- `transcriber_realtime.py` streams microphone audio to OpenAI realtime transcription and writes text while you speak.
+
+Once running, press the defined shortcut to start recording. Press it again to stop recording. The transcribed text will be inserted at the cursor position.
 
 # Building an executable
 

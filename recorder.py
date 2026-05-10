@@ -55,4 +55,6 @@ if __name__ == "__main__":
     print("Done")
     wav_bytes = rec.stop()
 
-    Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())
+    private_dir = Path(".private")
+    private_dir.mkdir(exist_ok=True)
+    (private_dir / "last_recording.wav").write_bytes(wav_bytes.getbuffer())

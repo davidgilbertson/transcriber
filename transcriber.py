@@ -15,6 +15,9 @@ from utils import get_foreground_window_title
 DEBUG = False
 
 SLOW_TYPE_DELAY_S = 0.01
+PRIVATE_DIR = Path(".private")
+LAST_RECORDING_PATH = PRIVATE_DIR / "last_recording.wav"
+LOG_PATH = PRIVATE_DIR / "log.jsonl"
 
 if DEBUG:
     # Catch COM faults
@@ -27,19 +30,13 @@ class Transcriber:
     def __init__(self, root: tk.Tk, hotkey="ctrl+alt+shift+q"):
         self.border = Border(root)
         self.rec = Recorder()
-        self._active_monitor_idx = None
 
         kb.add_hotkey(hotkey, self.toggle_recording)
         print(f"Press {hotkey} to start/stop recording.")
 
     def start(self):
         kb.add_hotkey("esc", self.stop)
-        # Pick active monitor once; reuse for transcribing
-        try:
-            self._active_monitor_idx = self.border.get_active_monitor_index()
-        except Exception:
-            self._active_monitor_idx = None
-        self.border.show("#F8312F", monitor_index=self._active_monitor_idx)
+        self.border.show("#F8312F")
 
         self.rec.start()
 
@@ -53,7 +50,8 @@ class Transcriber:
         return wav_bytes
 
     def transcribe(self, wav_bytes):
-        self.border.show("#FFB02E", monitor_index=self._active_monitor_idx)
+        PRIVATE_DIR.mkdir(exist_ok=True)
+        self.border.show("#FFB02E")
         from utils import stopwatch
 
         with stopwatch("Transcription", log=False) as sw:
@@ -79,16 +77,15 @@ class Transcriber:
         )
 
         # Log the text
-        log_path = Path("log.jsonl")
-        if not log_path.exists():
-            log_path.write_text(log_line)
+        if not LOG_PATH.exists():
+            LOG_PATH.write_text(log_line)
         else:
-            log_lines = log_path.read_text().splitlines()[-499:]  # Truncate
+            log_lines = LOG_PATH.read_text().splitlines()[-499:]  # Truncate
             log_lines.append(log_line)
-            log_path.write_text("\n".join(log_lines))
+            LOG_PATH.write_text("\n".join(log_lines))
 
         # Log the last recording
-        with open("last_recording.wav", "wb") as f:
+        with open(LAST_RECORDING_PATH, "wb") as f:
             f.write(wav_bytes.getbuffer())
 
     def toggle_recording(self):

@@ -42,7 +42,7 @@ class Border:
 
         # Create one overlay per monitor
         self._overlays = []  # list of dicts: {win, canvas, rect, bounds}
-        for (left, top, width, height) in monitors:
+        for left, top, width, height in monitors:
             win = tk.Toplevel(root)
             win.overrideredirect(True)
             win.attributes("-topmost", True)
@@ -112,7 +112,11 @@ class Border:
             ]
 
         MonitorEnumProc = ctypes.WINFUNCTYPE(
-            ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(RECT), ctypes.c_longlong
+            ctypes.c_int,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.POINTER(RECT),
+            ctypes.c_longlong,
         )
 
         monitors: List[Tuple[int, int, int, int]] = []
@@ -132,20 +136,15 @@ class Border:
         user32.EnumDisplayMonitors(0, 0, MonitorEnumProc(_callback), 0)
         return monitors
 
-    def show(self, color: str, monitor_index: Optional[int] = None):
-        """Show the overlay with the specified border color.
-
-        If monitor_index is provided, only that monitor's overlay is shown.
-        Otherwise, all overlays are shown.
-        """
-        targets = (
-            [self._overlays[monitor_index]]
-            if (monitor_index is not None and 0 <= monitor_index < len(self._overlays))
-            else self._overlays
-        )
-        for item in targets:
+    def show(self, color: str):
+        """Show the overlay with the specified border color."""
+        monitor_index = self.get_active_monitor_index()
+        for index, item in enumerate(self._overlays):
             item["canvas"].itemconfig(item["rect"], outline=color)
-            item["win"].deiconify()
+            if monitor_index is None or index == monitor_index:
+                item["win"].deiconify()
+            else:
+                item["win"].withdraw()
         # immediate redraw without mainloop
         # self.root.update()
 
@@ -188,7 +187,9 @@ class Border:
                 return 0 if self._overlays else None
 
             MONITOR_DEFAULTTONEAREST = 2
-            hmon = user32.MonitorFromWindow(ctypes.c_void_p(hwnd), MONITOR_DEFAULTTONEAREST)
+            hmon = user32.MonitorFromWindow(
+                ctypes.c_void_p(hwnd), MONITOR_DEFAULTTONEAREST
+            )
             if not hmon:
                 return 0 if self._overlays else None
 

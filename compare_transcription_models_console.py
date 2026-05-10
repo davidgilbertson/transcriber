@@ -22,8 +22,10 @@ MODELS: list[Model] = [
     "gemini-3-flash-preview",
 ]
 
-RESULTS_PATH = Path("transcription_model_results.json")
-HTML_PATH = Path("transcription_diff_views.html")
+PRIVATE_DIR = Path(".private")
+LAST_RECORDING_PATH = PRIVATE_DIR / "last_recording.wav"
+RESULTS_PATH = PRIVATE_DIR / "transcription_model_results.json"
+HTML_PATH = PRIVATE_DIR / "transcription_diff_views.html"
 TOKEN_RE = re.compile(r"\w+|[^\w\s]|\s+")
 MODEL_PRICING: dict[Model, dict[str, str]] = {
     "gpt-4o-mini-transcribe-2025-12-15": dict(
@@ -56,11 +58,11 @@ MODEL_PRICING: dict[Model, dict[str, str]] = {
         note="Google $0.016/min for standard v2 models incl. Chirp",
         url="https://cloud.google.com/speech-to-text/pricing?hl=en",
     ),
-    "gemini-3-flash-preview": dict(
-        price="~$0.12/hr + output",
-        note="Gemini API audio input at $1/1M tokens; audio is 32 tokens/s",
-        url="https://ai.google.dev/gemini-api/docs/pricing",
-    ),
+    # "gemini-3-flash-preview": dict(
+    #     price="~$0.12/hr + output",
+    #     note="Gemini API audio input at $1/1M tokens; audio is 32 tokens/s",
+    #     url="https://ai.google.dev/gemini-api/docs/pricing",
+    # ),
 }
 
 recorder = Recorder()
@@ -79,15 +81,17 @@ def start():
 
 def stop():
     wav_bytes = recorder.stop()
-    Path("last_recording.wav").write_bytes(wav_bytes.getbuffer())
+    PRIVATE_DIR.mkdir(exist_ok=True)
+    LAST_RECORDING_PATH.write_bytes(wav_bytes.getbuffer())
     return compare_wav_bytes(wav_bytes.getvalue())
 
 
 def compare_last_recording():
-    compare_wav_bytes(Path("last_recording.wav").read_bytes())
+    compare_wav_bytes(LAST_RECORDING_PATH.read_bytes())
 
 
 def compare_wav_bytes(audio_bytes: bytes):
+    PRIVATE_DIR.mkdir(exist_ok=True)
     result = dict(recorded_at=datetime.now().isoformat(timespec="seconds"))
 
     for model in MODELS:
@@ -102,11 +106,11 @@ def compare_wav_bytes(audio_bytes: bytes):
                 response_time_s=round(default_timer() - started_at, 2),
             )
         except Exception as exc:
-            print(f"{model}: ERROR: {exc}")
-            result[model] = dict(
-                error=str(exc),
-                response_time_s=round(default_timer() - started_at, 2),
-            )
+            print(f"Skipping {model}. ERROR: {exc}")
+            # result[model] = dict(
+            #     error=str(exc),
+            #     response_time_s=round(default_timer() - started_at, 2),
+            # )
 
     if RESULTS_PATH.exists():
         results = json.loads(RESULTS_PATH.read_text())

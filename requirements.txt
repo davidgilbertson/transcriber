@@ -1,6 +1,0 @@
-deepgram-sdk
-keyboard
-numpy
-openai
-pydub
-sounddevice
