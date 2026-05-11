@@ -12,6 +12,6 @@ if not exist "%PRIVATE_DIR%" mkdir "%PRIVATE_DIR%"
 
 call "%SCRIPT_DIR%stop_transcriber.bat"
 
-for /f %%i in ('powershell -NoProfile -Command "$process = Start-Process -FilePath '%SCRIPT_DIR%.venv\Scripts\pythonw.exe' -ArgumentList @('%SCRIPT_DIR%transcriber_realtime.py') -WorkingDirectory '%SCRIPT_DIR%' -PassThru; $process.Id"') do (
+for /f %%i in ('powershell -NoProfile -Command "$process = Start-Process -FilePath '%SCRIPT_DIR%.venv\Scripts\pythonw.exe' -ArgumentList @('%SCRIPT_DIR%transcriber.py') -WorkingDirectory '%SCRIPT_DIR%' -PassThru; $process.Id"') do (
     >"%PID_FILE%" echo %%i
 )

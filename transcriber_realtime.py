@@ -1,13 +1,9 @@
-# Target realtime transcriber flow:
-# 1. User presses the hotkey to start recording.
-# 2. Recording starts immediately. No waiting for OpenAI connection setup before capturing audio.
-# 3. In the background, the realtime OpenAI connection/session is created or already available.
-# 4. As microphone audio arrives, it is sent to the realtime connection continuously.
-# 5. As transcription deltas come back while the user is still speaking, those words are written to the active window live, not held until the stop hotkey.
-# 6. User presses the hotkey again to stop recording.
-# 7. The app stops capturing microphone audio.
-# 8. The app sends `commit` for the final buffered audio, keeps listening for remaining deltas / the `completed` transcript, and writes any final trailing text that was not already written.
-# 9. Once `completed` arrives, the app is done with that recording turn.
+# Realtime transcription flow:
+# 1. The configured hotkey starts recording, either while held or until pressed again.
+# 2. Recording starts immediately; OpenAI realtime setup happens in the sender thread.
+# 3. Microphone chunks are appended to the realtime input buffer as they arrive.
+# 4. Transcription deltas are written to the active window while speech is still being captured.
+# 5. Stopping recording closes the microphone stream, commits the buffer, and waits for the final completed event.
 
 import base64
 import queue
@@ -26,10 +22,10 @@ import volume
 from border import Border
 
 
-model = "gpt-realtime-whisper"
 config = tomllib.loads(Path(__file__).with_name("config.toml").read_text())
-hotkey = config["realtime"]["hotkey"]
-push_to_talk = config["realtime"]["push_to_talk"]
+model = config["realtime_model"]
+hotkey = config["hotkey"]
+push_to_talk = config["push_to_talk"]
 
 
 class TranscriberRealtime:
@@ -122,6 +118,8 @@ class TranscriberRealtime:
                 )
 
             self.connection.input_audio_buffer.commit()
+            # TODO: Handle realtime error/failure events so this wait cannot hang
+            # forever when the API rejects a session or transcription config.
             self.completed.wait()
             self.connection.close()
             self.receiver_thread.join()
