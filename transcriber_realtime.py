@@ -13,6 +13,8 @@ import base64
 import queue
 import threading
 import tkinter as tk
+import tomllib
+from pathlib import Path
 
 import keyboard
 from dotenv import load_dotenv
@@ -24,16 +26,16 @@ import volume
 from border import Border
 
 
-MODEL = "gpt-realtime-whisper"
-DELAY = "xhigh"  # "minimal", "low", "medium", "high", "xhigh"
-PUSH_TO_TALK = True
+model = "gpt-realtime-whisper"
+config = tomllib.loads(Path(__file__).with_name("config.toml").read_text())
+hotkey = config["realtime"]["hotkey"]
+push_to_talk = config["realtime"]["push_to_talk"]
 
 
 class TranscriberRealtime:
-    def __init__(self, root: tk.Tk, hotkey="ctrl+alt+shift+q"):
+    def __init__(self, root: tk.Tk):
         self.border = Border(root)
         self.client = OpenAI()
-        self.hotkey = hotkey
         self.audio_queue = queue.Queue()
         self.completed = threading.Event()
         self.connection = None
@@ -44,12 +46,10 @@ class TranscriberRealtime:
         self.recording_lock = threading.Lock()
         self.wrote_text = False
 
-        if PUSH_TO_TALK:
+        if push_to_talk:
             kb.add_hold_hotkey(hotkey, self.start, self.stop)
-            print(f"Hold {hotkey} to record.")
         else:
             kb.add_hotkey(hotkey, self.toggle_recording)
-            print(f"Press {hotkey} to start/stop recording.")
 
     def start(self):
         with self.recording_lock:
@@ -103,9 +103,9 @@ class TranscriberRealtime:
                         input=dict(
                             format=dict(type="audio/pcm", rate=24_000),
                             transcription=dict(
-                                model=MODEL,
+                                model=model,
                                 language="en",
-                                delay=DELAY,
+                                delay="xhigh",  # "minimal", "low", "medium", "high", "xhigh"
                             ),
                             turn_detection=None,
                         )

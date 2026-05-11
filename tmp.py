@@ -31,6 +31,7 @@ VK_NAMES = {
     0xA4: "LALT",
     0xA5: "RALT",
     0x51: "Q",
+    0x91: "SCROLLLOCK",
     0x7C: "F13",
     0x7D: "F14",
     0x7E: "F15",

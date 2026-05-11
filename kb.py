@@ -30,6 +30,7 @@ VK_NAMES: dict[str, int] = {
     "win": 0x5B,
     "cmd": 0x5B,
     "esc": 0x1B,
+    "scrolllock": 0x91,
 }
 
 user32 = ctypes.windll.user32  # type: ignore[attr-defined]
